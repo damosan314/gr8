@@ -6,6 +6,10 @@
  * 
  * build:
  *  cl65 -Osir -C gfx.cfg -t atari gfx.c gr8sprite.s -o gfx.xex
+ *
+ * or
+ *
+ *  cl65 -Osir -t atari -Wl -D__STACKSIZE__=0x400 -Wl -D__RESERVED_MEMORY__=0x2000 gfx.c gr8sprite.s -o gfx.xex
  */
 
 #include <atari.h>
