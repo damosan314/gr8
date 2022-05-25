@@ -19,6 +19,8 @@ word plot_pixel_lookups_zpCheat( void );
 word plot_pixel_cheat( void );
 word plot_pixel_256_zp5( void );
 word plot_pixel_256_asm( void );
+word plot_pixel_256_asm2( void );
+word plot_pixel_256_asm3( void );
 void clear_clock( void );
 
 #endif

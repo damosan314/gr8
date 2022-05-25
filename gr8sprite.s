@@ -6,7 +6,9 @@
 	.global _init_fast
 	.global _plot_pixel_256
 	.global _plot_pixel_256_fast		
-	
+	.global _plot_pixel_256_opt	
+	.global _plot_pixel_256_full
+
 	;; page zero locations (stomping all over FP space)
 
 	destination = $d4	; address of gfx buffer, used by bitmap and copy
@@ -175,24 +177,22 @@ _plot_pixel_256:
 	cmp lasty
 	bne _plot_pixel_256_calcaddr
 _plot_pixel_256_fast:		; call this if we're writing to same row
-	ldx 	xb
+	ldx xb
 	ldy	byteoffset256_table,x	; (4+)
-r:	lda	$ffff,y	    		; (4+) load screen byte
+r:	lda	$ffff,y	    			; (4+) load screen byte
 	ora	bitmask_table,x	    	; (4+) xor it with pixel bitmask
-w:	sta	$ffff,y	    		; (5) store it back to screen byte
+w:	sta	$ffff,y	    			; (5) store it back to screen byte
 	rts
 _plot_pixel_256_calcaddr:
-	sta lasty				; store the lasty
-	tay			      		; (2) accum stores the row we're interested in
-	lda	yindexhi,y	      	; (4+) get row address
+	sta lasty					; store the lasty
+	tay			      			; (2) accum stores the row we're interested in
+	lda	yindexhi,y	      		; (4+) get row address
 	sta r+2
 	sta w+2
-	lda	yindexlo,y			; (4+)
+	lda	yindexlo,y				; (4+)
 	sta w+1
 	sta r+1
 	jmp _plot_pixel_256_fast
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
@@ -237,6 +237,38 @@ if_skip:
 	sta	offset256+1
 	rts
 
+_plot_pixel_256_opt:
+	ldy yb
+	ldx byteoffset256_table,y
+	lda yindexlo,y
+	sta argument
+	lda yindexhi,y
+	sta argument+1
+	lda argument,y
+	ora bitmask_table,x
+	sta argument,y
+	rts
+
+_plot_pixel_256_full:
+	lda	#0
+	sta xb
+	sta yb
+row_loop:
+	jsr _plot_pixel_256_opt
+	inc xb
+	lda xb
+	cmp #$ff
+	bne row_loop
+	lda #0
+	sta xb
+	inc yb
+	lda yb
+	cmp #192
+	bne row_loop
+	rts
+
+
+	
 
 
 

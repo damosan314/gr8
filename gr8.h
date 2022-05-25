@@ -41,8 +41,10 @@
 /*
  * declare the assembly routines defined in gr8sprite.s
  */
+extern void plot_pixel_256_opt( void );
 extern void plot_pixel_256( void );
 extern void plot_pixel_256_fast( void );
 extern void init_fast( void );
+extern void plot_pixel_256_full( void );
 
 #endif

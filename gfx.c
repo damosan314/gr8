@@ -29,20 +29,22 @@ typedef struct {
 } test;
 
 test tests[] = {
-    { true,  "SAVMSC + MATH",             &plot_savmsc_test, 0 },
-    { true,  "SAVMSC + SHIFTS",           &plot_savmsc_test_shifts, 0 },
-    { true,  "SAVMSC + REGISTER",         &plot_shifts_and_register, 0 },
-    { true,  "SAVMSC + MASK LOOKUP",      &plot_pixel_mask, 0 },
-    { true,  "SAVMSC + MASK PLUS",        &plot_pixel_mask_plus, 0 },
-    { true,  "SAVMSC + FULL LOOKUPS",     &plot_pixel_lookups, 0 },
-    { true,  "SAVMSC + FULL LOOKUPS-ZP",  &plot_pixel_lookups_zp, 0 },
-    { true,  "SAVMSC + FULL LOOKUPS-ZP2", &plot_pixel_lookups_zp2, 0 },
-    { true,  "SAVMSC + FULL LOOKUPS-ZP3", &plot_pixel_lookups_zp3, 0 },
-    { true,  "FULL ZERO PAGE",            &plot_pixel_lookups_zp4, 0 },
-    { true,  "SAVMSC + FULL ZP + 256",    &plot_pixel_256_zp5, 0 },
-    { true,  "SAVMSC + ASM + 256",        &plot_pixel_256_asm, 0 },
-    { true,  "CHEATING - INLINE",         &plot_pixel_lookups_zpCheat, 0 },
-    { true,  "CHEATING - MEMSET",         &plot_pixel_cheat, 0 }
+    { true,  "SAVMSC + MATH",              &plot_savmsc_test, 0 },
+    { true,  "SAVMSC + SHIFTS",            &plot_savmsc_test_shifts, 0 },
+    { true,  "SAVMSC + REGISTER",          &plot_shifts_and_register, 0 },
+    { true,  "SAVMSC + MASK LOOKUP",       &plot_pixel_mask, 0 },
+    { true,  "SAVMSC + MASK PLUS",         &plot_pixel_mask_plus, 0 },
+    { true,  "SAVMSC + FULL LOOKUPS",      &plot_pixel_lookups, 0 },
+    { true,  "SAVMSC + FULL LOOKUPS-ZP",   &plot_pixel_lookups_zp, 0 },
+    { true,  "SAVMSC + FULL LOOKUPS-ZP2",  &plot_pixel_lookups_zp2, 0 },
+    { true,  "SAVMSC + FULL LOOKUPS-ZP3",  &plot_pixel_lookups_zp3, 0 },
+    { true,  "FULL ZERO PAGE",             &plot_pixel_lookups_zp4, 0 },
+    { true,  "SAVMSC + FULL ZP + 256",     &plot_pixel_256_zp5, 0 },
+    { true,  "SAVMSC + ASM + 256",         &plot_pixel_256_asm, 0 },
+    { true,  "SAVMSC + ASM + 256 + OPT",   &plot_pixel_256_asm2, 0 },
+    { true,  "SAVMSC + ASM + 256 + FULL",  &plot_pixel_256_asm3, 0 },
+    { true,  "CHEATING - INLINE",          &plot_pixel_lookups_zpCheat, 0 },
+    { true,  "CHEATING - MEMSET",          &plot_pixel_cheat, 0 }
 };
 
 #define TEST_COUNT ( sizeof( tests ) / sizeof( test ) )
@@ -586,6 +588,48 @@ exit:
 }
 
 
+word plot_pixel_256_asm2( void ) {
+    BASEGFX = (word)SAVMSC;
+    init_fast();   
+
+    lbzero( SAVMSC, 8192 );
+    print_at( 0, 23, "Full ZP ASM faking 256x192-OPT");
+    clear_clock();
+
+    YB = 0;
+draw_row:
+    XB = 0;
+next_column:
+    plot_pixel_256_opt();
+    if( XB == 255 )
+        goto next_row;
+    ++XB;
+    goto next_column;
+next_row:
+    if( ++YB == 192 )
+        goto exit;
+    goto draw_row;
+exit:
+    return (word) ( OS.rtclok[ 1 ] * 256 + OS.rtclok[2] );
+}
+
+
+word plot_pixel_256_asm3( void ) {
+    BASEGFX = (word)SAVMSC;
+    init_fast();   
+
+    lbzero( SAVMSC, 8192 );
+    print_at( 0, 23, "ASM faking 256x192-FULL");
+    clear_clock();
+
+    YB = 0;
+    XB = 0;
+    plot_pixel_256_full();
+
+    return (word) ( OS.rtclok[ 1 ] * 256 + OS.rtclok[2] );
+}
+
+
 /****************************************************************
  * code to drive the tests starts here
  */
@@ -606,12 +650,13 @@ void main( void ) {
 
     _graphics( 0 );
 
+
     for( iteration = 0; iteration < TEST_COUNT; iteration++ )
         if( tests[ iteration ].run_test )
             printf("%25s %5d %5d\n",
                 tests[ iteration ].test_name,
                 tests[ iteration ].jiffies,
-                ( iteration == 10 || iteration == 11 ? ( 256 * 192 ) : ( 320 * 192 )) / tests[ iteration ].jiffies );
+                ( iteration >= 10 || iteration <= 13 ? ( 256 * 192 ) : ( 320 * 192 )) / tests[ iteration ].jiffies );
 
     while( true )
         ;
