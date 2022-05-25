@@ -175,10 +175,10 @@ _plot_pixel_256:
 	cmp lasty
 	bne _plot_pixel_256_calcaddr
 _plot_pixel_256_fast:		; call this if we're writing to same row
-	ldx xb
+	ldx 	xb
 	ldy	byteoffset256_table,x	; (4+)
 r:	lda	$ffff,y	    		; (4+) load screen byte
-	ora	bitmask_table,x	    ; (4+) xor it with pixel bitmask
+	ora	bitmask_table,x	    	; (4+) xor it with pixel bitmask
 w:	sta	$ffff,y	    		; (5) store it back to screen byte
 	rts
 _plot_pixel_256_calcaddr:
@@ -191,6 +191,7 @@ _plot_pixel_256_calcaddr:
 	sta w+1
 	sta r+1
 	jmp _plot_pixel_256_fast
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
